@@ -661,6 +661,7 @@ try {
                 $target_msbuild_options = msbuild-options $i
                 & $target_msbuild_exe $global_msbuild_options $target_msbuild_options `
                     /fl /flp:logfile=$($i.vsman_logfile) `
+                    /p:SignedMsiPath=$($i.signed_msidir) `
                     $signed_vsman_project
             }
         }
@@ -680,7 +681,7 @@ try {
             
             if ($i.VSName) {$fmt.VSName = " $($i.VSName)"} else {$fmt.VSName = ""}
             
-            Get-ChildItem "$($i.final_msidir)\*.msi", "$($i.final_msidir)\*.vsix", "$($i.final_msidir)\*.json", "$($i.destdir)\Setup15\*.vsman" | `
+            Get-ChildItem "$($i.final_msidir)\*.msi", "$($i.final_msidir)\*.vsix", "$($i.final_msidir)\*.json", "$($i.final_msidir)\*.vsman" | `
                 ?{ $installer_names[$_.Name] } | `
                 %{ @{
                     src=$_;

@@ -19,9 +19,9 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <MergeManifest Include="$(BuildOutputRoot)\SignedMsi\Microsoft.VisualStudio.NodeJsTools.InteractiveWindow.json" />
-        <MergeManifest Include="$(BuildOutputRoot)\SignedMsi\Microsoft.VisualStudio.NodejsTools.NodejsTools.json" />
-        <MergeManifest Include="$(BuildOutputRoot)\SignedMsi\Microsoft.VisualStudio.NodejsTools.Targets.json" />
+        <MergeManifest Include="$(SignedMsiPath)\Microsoft.VisualStudio.NodeJsTools.InteractiveWindow.json" />
+        <MergeManifest Include="$(SignedMsiPath)\Microsoft.VisualStudio.NodejsTools.NodejsTools.json" />
+        <MergeManifest Include="$(SignedMsiPath)\Microsoft.VisualStudio.NodejsTools.Targets.json" />
     </ItemGroup>
 
     <Import Project="$(PackagesPath)\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets"/>
