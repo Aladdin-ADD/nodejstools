@@ -150,6 +150,7 @@ $version_file = gi "$buildroot\Nodejs\Product\AssemblyVersion.cs"
 $build_project = gi "$buildroot\Nodejs\dirs.proj"
 $setup_project = gi "$buildroot\Nodejs\Setup\setup.proj"
 $setup_swix_project = gi "$buildroot\Nodejs\Setup\setup-swix.proj"
+$signed_vsman_project = gi "$buildroot\Nodejs\Setup\swix\NodejsTools_signed.vsmanproj"
 
 # Project metadata
 $project_name = "Node.js Tools for Visual Studio"
@@ -236,6 +237,10 @@ function after-build($buildroot, $target) {
     $setup15 = mkdir "$($target.destdir)\Setup15" -Force 
     Copy-Item -Recurse -Force "$buildroot\BuildOutput\$($target.config)$($target.VSTarget)\Binaries\**\*.json" $setup15 
     Copy-Item -Recurse -Force "$buildroot\BuildOutput\$($target.config)$($target.VSTarget)\Setup\*.vsman" $setup15 
+
+    if ($signedBuild) {
+        Copy-Item -Recurse -Force "$buildroot\BuildOutput\$($target.config)$($target.VSTarget)\Binaries\**\*.json" $($target.signed_msidir)
+    }
 
     if ($copytests) {
         Copy-Item -Recurse -Force "$buildroot\BuildOutput\$($target.config)$($target.VSTarget)\Tests" "$($target.destdir)\Tests"
@@ -513,6 +518,7 @@ try {
                 $i.signed_msidir = mkdir "$($i.destdir)\SignedMsi" -Force
                 $i.final_msidir = $i.signed_msidir
                 $i.signed_logfile = "$logdir\BuildRelease_Signed.$config.$($_.number).log"
+                $i.vsman_logfile = "$logdir\BuildRelease_vsman.$config.$($_.number).log"
             } else {
                 $i.final_msidir = $i.unsigned_msidir
             }
@@ -643,6 +649,20 @@ try {
             }
 
             end_sign_files $jobs
+
+            foreach ($i in $target_info) {
+                if ($i.logfile -in $failed_logs) {
+                    Write-Output "Skipping vsman project for $($i.VSName) because the build failed"
+                    continue
+                }
+
+                Write-Output "Begin vsman build for $($i.VSName)"
+                $target_msbuild_exe = msbuild-exe $i
+                $target_msbuild_options = msbuild-options $i
+                & $target_msbuild_exe $global_msbuild_options $target_msbuild_options `
+                    /fl /flp:logfile=$($i.vsman_logfile) `
+                    $signed_vsman_project
+            }
         }
         ######################################################################
         ##  END SIGNING CODE
@@ -660,7 +680,7 @@ try {
             
             if ($i.VSName) {$fmt.VSName = " $($i.VSName)"} else {$fmt.VSName = ""}
             
-            Get-ChildItem "$($i.final_msidir)\*.msi", "$($i.final_msidir)\*.vsix", "$($i.destdir)\Setup15\*.json", "$($i.destdir)\Setup15\*.vsman" | `
+            Get-ChildItem "$($i.final_msidir)\*.msi", "$($i.final_msidir)\*.vsix", "$($i.final_msidir)\*.json", "$($i.destdir)\Setup15\*.vsman" | `
                 ?{ $installer_names[$_.Name] } | `
                 %{ @{
                     src=$_;
